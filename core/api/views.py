@@ -80,7 +80,7 @@ class ItemDetailView(RetrieveAPIView):
     lookup_field = 'slug'
 
 
-class AddressListVIew(ListAPIView):
+class AddressListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = AddressSerializer
 
@@ -98,3 +98,8 @@ class AddressCreateView(CreateAPIView):
 class CountryListView(APIView):
     def get(self,request,*args,**kwargs):
         return Response(countries,status=HTTP_200_OK)
+
+
+class UserIDView(APIView):
+    def get(self,request,*args, **kwargs):
+        return Response({'userID':request.user.id},status=HTTP_200_OK)

@@ -9,3 +9,4 @@ export const orderSummaryURL = `${endpoint}/order-summary/`;
 export const addressListURL = `${endpoint}/addresses`
 export const addresscreateURL = `${endpoint}/addresses/create/`
 export const countriesURL = `${endpoint}/countries/`
+export const useridURL = `${endpoint}/userID/`
