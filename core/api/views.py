@@ -1,5 +1,5 @@
 from django_countries import countries
-from rest_framework.generics import ListAPIView,RetrieveAPIView,CreateAPIView
+from rest_framework.generics import ListAPIView,RetrieveAPIView,CreateAPIView,UpdateAPIView,DestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK,HTTP_400_BAD_REQUEST
@@ -85,10 +85,25 @@ class AddressListView(ListAPIView):
     serializer_class = AddressSerializer
 
     def get_queryset(self):
-        return Address.objects.filter(user=self.request.user)
+        address_type = self.request.query_params.get('address_type',None)
+        if address_type is None:
+            return Address.objects.filter(user=self.request.user)
+        else:
+            return Address.objects.filter(user=self.request.user,address_type=address_type)
     
 
 class AddressCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = AddressSerializer
+    queryset = Address.objects.all()
+
+class AddressUpdateView(UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = AddressSerializer
+    queryset = Address.objects.all()
+
+
+class AddressDeleteView(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = AddressSerializer
     queryset = Address.objects.all()
@@ -103,3 +118,36 @@ class CountryListView(APIView):
 class UserIDView(APIView):
     def get(self,request,*args, **kwargs):
         return Response({'userID':request.user.id},status=HTTP_200_OK)
+
+
+class OrderItemDeleteView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = OrderItem.objects.all()
+
+
+
+class OrderQuantityUpdateView(APIView):
+    def post(self,request,*args,**kwargs):
+        slug = request.data.get('slug',None)
+        if slug is None:
+            return Response({'message':'Invalid data'},status=HTTP_400_BAD_REQUEST)
+        item = get_object_or_404(Item,slug=slug)
+        order_qs = Order.objects.filter(user=request.user,ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if order.items.filter(item__slug=slug).exists():
+                order_item = OrderItem.objects.filter(
+                    item=item,
+                    user=request.user,
+                    ordered=False
+                )[0]
+                if order_item.quantity > 1:
+                    order_item.quantity-=1
+                    order_item.save()
+                else:
+                    order.items.remove(order_item)
+                return Response(status=HTTP_200_OK)
+            else:
+                return Response({'message':'THis item is not in your cart'},status=HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message':'THis item is not in your cart'},status=HTTP_400_BAD_REQUEST)

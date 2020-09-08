@@ -116,5 +116,6 @@ class AddressSerializer(ModelSerializer):
             'zip',
             'address_type',
             'default',
-            'user'
+            'user',
+            'id'
         )
